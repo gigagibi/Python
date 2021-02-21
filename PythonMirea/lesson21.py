@@ -8,7 +8,7 @@ def f21(x):
                     return 1
                 elif x[1] == 'xs':
                     return 2
-                elif x[2] == 'krl':
+                elif x[1] == 'krl':
                     return 3
             elif x[0] == 'c++':
                 return 4
@@ -20,7 +20,7 @@ def f21(x):
                     return 6
                 elif x[1] == 'krl':
                     return 7
-            elif x[3] == '1961':
+            elif x[3] == 1961:
                 return 8
             elif x[3] == 2012:
                 return 9
