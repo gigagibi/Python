@@ -5,6 +5,7 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 import psycopg2
 import random
 
+
 # класс пользователя, содержит id пользователя и его режим меню
 class User:
     def __init__(self, id, mode):
@@ -37,11 +38,18 @@ keyboard.add_button(label="Who tf asked", color=VkKeyboardColor.POSITIVE)
 keyboard.add_line()
 keyboard.add_button(label="Pepe", color=VkKeyboardColor.POSITIVE)
 keyboard.add_button(label="толстяк с пистолетом", color=VkKeyboardColor.POSITIVE)
+keyboard.add_line()
+keyboard.add_button(label="Создать мем", color=VkKeyboardColor.DEFAULT)
 # клавиатура для выбора рандома или списка мемов
 end_keyboard = VkKeyboard(one_time=False)
 end_keyboard.add_button(label='Рандомный мем', color=VkKeyboardColor.POSITIVE)
 end_keyboard.add_button(label='Список мемов', color=VkKeyboardColor.POSITIVE)
 end_keyboard.add_button(label='Назад', color=VkKeyboardColor.NEGATIVE)
+
+# клавиатура с мемами пользователя
+# users_keyboard = VkKeyboard(one_time=False)
+# keyboard.add_button()
+
 
 # добавляет пользователя в базу данных
 def add_user_into_DB(user):
@@ -50,6 +58,7 @@ def add_user_into_DB(user):
         (user.id, user.mode)
     )
     con.commit()
+
 
 # возвращает список пользователей из базы данных
 def get_users_from_DB():
@@ -63,6 +72,7 @@ def get_users_from_DB():
         us_obj.append(User(int(string[0]), string[1]))
     return us_obj
 
+
 # обновляет параметры пользователя в БД
 def update_user(id, mode):
     cur.execute(
@@ -75,8 +85,8 @@ def update_user(id, mode):
 # возвращает список мемов
 def search_meme_in_DB(name):
     cur.execute(
-        "select link from links where name like %s or name like LOWER(%s) or LOWER(%s)=ANY(tags) or %s=ANY(tags)",
-        (name, name, name, name)
+        "select link from links where name like %s or name like LOWER(%s) or array_to_string(tags, ' ') like LOWER(%s) or array_to_string(tags, ' ') like %s",
+        ('%' + name + '%', '%' + name + '%', '%' + name + '%', '%' + name + '%')
     )
     con.commit()
     memes = cur.fetchall()
@@ -89,11 +99,19 @@ def return_random_meme(name):
     rand_num = random.randint(0, len(catalog) - 1)
     return catalog[rand_num]
 
+
 # отправляет сообщение
 def send_message(id, text, keyb):
     vk_session.method('messages.send',
                       {"user_id": id, "message": text, "random_id": 0, "keyboard": keyb.get_keyboard()})
 
+
+# def add_meme(name, link, tags):
+#     cur.execute(
+#         'insert into links(name, link, tags) values(%s, %s, %s)',
+#         (name, link, str(tags).replace('[', '{').replace(']', '}'))
+#     )
+#     con.commit()
 
 # главный цикл
 users = get_users_from_DB()
@@ -125,6 +143,10 @@ for event in longpoll.listen():
                         update_user(id, user.mode)
                         send_message(id, 'Прислать один рандомный найденный мем или список найденных мемов?',
                                      end_keyboard)
+                    # elif user.mode == 'start' and msg == 'создать мем':
+                    #     user.mode = 'add'
+                    #     update_user(id, user.mode)
+                    #     send_message()
                     elif user.mode == 'end':
                         if msg == 'рандомный мем':
                             send_message(id, memes_list[random.randint(0, len(memes_list) - 1)], keyboard)
@@ -136,8 +158,11 @@ for event in longpoll.listen():
                             user.mode = 'start'
                             update_user(id, user.mode)
                         elif msg == 'назад':
-                            user.mode='start'
+                            user.mode = 'start'
                             update_user(id, user.mode)
                             send_message(id, 'Введи слово, связанное с мемом, или нажми на кнопку', keyboard)
-
-# print(search_meme_in_DB('назад'))
+# l = []
+# l.append('a')
+# l.append('b')
+# l.append('n')
+# print(str(l).replace('[', '{').replace(']', '}'))
