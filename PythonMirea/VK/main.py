@@ -5,7 +5,7 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 import psycopg2
 import random
 
-
+# класс пользователя, содержит id пользователя и его режим меню
 class User:
     def __init__(self, id, mode):
         self.id = id
@@ -28,7 +28,7 @@ vk_session = vk_api.VkApi(token=my_token)
 session_api = vk_session.get_api()
 longpoll = VkLongPoll(vk_session)
 
-# добавление клавиатуры
+# добавление клавиатуры для выбора мема
 keyboard = VkKeyboard(one_time=False)
 keyboard.add_button(label="Кринж", color=VkKeyboardColor.POSITIVE)
 keyboard.add_button(label="Floppa", color=VkKeyboardColor.POSITIVE)
@@ -37,27 +37,40 @@ keyboard.add_button(label="Who tf asked", color=VkKeyboardColor.POSITIVE)
 keyboard.add_line()
 keyboard.add_button(label="Pepe", color=VkKeyboardColor.POSITIVE)
 keyboard.add_button(label="толстяк с пистолетом", color=VkKeyboardColor.POSITIVE)
-keyboard.add_button(label='Назад', color=VkKeyboardColor.NEGATIVE)
-
+# клавиатура для выбора рандома или списка мемов
 end_keyboard = VkKeyboard(one_time=False)
 end_keyboard.add_button(label='Рандомный мем', color=VkKeyboardColor.POSITIVE)
 end_keyboard.add_button(label='Список мемов', color=VkKeyboardColor.POSITIVE)
 end_keyboard.add_button(label='Назад', color=VkKeyboardColor.NEGATIVE)
 
-
+# добавляет пользователя в базу данных
 def add_user_into_DB(user):
     cur.execute(
-        'insert into link values(%s, %s)',
+        'insert into users values(%s, %s)',
         (user.id, user.mode)
     )
     con.commit()
 
+# возвращает список пользователей из базы данных
 def get_users_from_DB():
+    us_obj = []
     cur.execute(
         "select * from users",
     )
+    us_str = cur.fetchall()
     con.commit()
-    return cur.fetchall
+    for string in us_str:
+        us_obj.append(User(int(string[0]), string[1]))
+    return us_obj
+
+# обновляет параметры пользователя в БД
+def update_user(id, mode):
+    cur.execute(
+        "update users set mode = %s where user_id=%s",
+        (mode, id)
+    )
+    con.commit()
+
 
 # возвращает список мемов
 def search_meme_in_DB(name):
@@ -67,7 +80,7 @@ def search_meme_in_DB(name):
     )
     con.commit()
     memes = cur.fetchall()
-    return 'Ничего не найдено' if memes is None else memes
+    return ['Ничего не найдено'] if len(memes) == 0 else memes
 
 
 # возвращает случайный мем из списка
@@ -76,15 +89,17 @@ def return_random_meme(name):
     rand_num = random.randint(0, len(catalog) - 1)
     return catalog[rand_num]
 
-
+# отправляет сообщение
 def send_message(id, text, keyb):
     vk_session.method('messages.send',
                       {"user_id": id, "message": text, "random_id": 0, "keyboard": keyb.get_keyboard()})
 
 
-users = []
+# главный цикл
+users = get_users_from_DB()
 memes_list = []
 for event in longpoll.listen():
+    users = get_users_from_DB()
     if event.type == VkEventType.MESSAGE_NEW:
         if event.to_me:
             msg = event.text.lower()
@@ -94,9 +109,12 @@ for event in longpoll.listen():
                 for user in users:
                     if id == user.id:
                         user.mode = 'start'
+                        update_user(user.id, user.mode)
+                        send_message(id, 'Введи слово, связанное с мемом, или нажми на кнопку', keyboard)
                         flag = 1
                 if flag == 0:
-                    users.append(User(id, 'start'))
+                    add_user_into_DB(User(id, 'start'))
+                    users = get_users_from_DB()
                     send_message(id, 'Введи слово, связанное с мемом, или нажми на кнопку', keyboard)
 
             for user in users:
@@ -104,15 +122,22 @@ for event in longpoll.listen():
                     if user.mode == 'start' and msg != 'начать':
                         memes_list = search_meme_in_DB(msg)
                         user.mode = 'end'
+                        update_user(id, user.mode)
                         send_message(id, 'Прислать один рандомный найденный мем или список найденных мемов?',
                                      end_keyboard)
                     elif user.mode == 'end':
                         if msg == 'рандомный мем':
                             send_message(id, memes_list[random.randint(0, len(memes_list) - 1)], keyboard)
                             user.mode = 'start'
+                            update_user(id, user.mode)
                         elif msg == 'список мемов':
                             for meme in memes_list:
                                 send_message(id, meme, keyboard)
                             user.mode = 'start'
+                            update_user(id, user.mode)
+                        elif msg == 'назад':
+                            user.mode='start'
+                            update_user(id, user.mode)
+                            send_message(id, 'Введи слово, связанное с мемом, или нажми на кнопку', keyboard)
 
-# print(search_meme_in_DB('Китай'))
+# print(search_meme_in_DB('назад'))
