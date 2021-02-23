@@ -45,6 +45,13 @@ end_keyboard = VkKeyboard(one_time=False)
 end_keyboard.add_button(label='Рандомный мем', color=VkKeyboardColor.POSITIVE)
 end_keyboard.add_button(label='Список мемов', color=VkKeyboardColor.POSITIVE)
 end_keyboard.add_button(label='Назад', color=VkKeyboardColor.NEGATIVE)
+# кнопка для окончания добавления тегов
+tags_end_keyboard = VkKeyboard(one_time=False)
+tags_end_keyboard.add_button(label="СТОП", color=VkKeyboardColor.NEGATIVE)
+tags_end_keyboard.add_button(label='Назад', color=VkKeyboardColor.NEGATIVE)
+# клавиатура с кнопкой назад
+goback_keyboard = VkKeyboard(one_time=False)
+goback_keyboard.add_button(label='Назад', color=VkKeyboardColor.NEGATIVE)
 
 # клавиатура с мемами пользователя
 # users_keyboard = VkKeyboard(one_time=False)
@@ -102,20 +109,25 @@ def return_random_meme(name):
 
 # отправляет сообщение
 def send_message(id, text, keyb):
-    vk_session.method('messages.send',
-                      {"user_id": id, "message": text, "random_id": 0, "keyboard": keyb.get_keyboard()})
+    if (keyb is not None):
+        vk_session.method('messages.send',
+                          {"user_id": id, "message": text, "random_id": 0, "keyboard": keyb.get_keyboard()})
+    else:
+        vk_session.method('messages.send', {"user_id": id, "message": text, "random_id": 0})
 
 
-# def add_meme(name, link, tags):
-#     cur.execute(
-#         'insert into links(name, link, tags) values(%s, %s, %s)',
-#         (name, link, str(tags).replace('[', '{').replace(']', '}'))
-#     )
-#     con.commit()
+def add_meme(name, link, tags):
+    cur.execute(
+        'insert into links(name, link, tags) values(%s, %s, %s)',
+        (name, link, str(tags).replace('[', '{').replace(']', '}'))
+    )
+    con.commit()
+
 
 # главный цикл
 users = get_users_from_DB()
 memes_list = []
+add_name, add_link, add_tags = '', '', []
 for event in longpoll.listen():
     users = get_users_from_DB()
     if event.type == VkEventType.MESSAGE_NEW:
@@ -136,17 +148,39 @@ for event in longpoll.listen():
                     send_message(id, 'Введи слово, связанное с мемом, или нажми на кнопку', keyboard)
 
             for user in users:
+
                 if user.id == id:
-                    if user.mode == 'start' and msg != 'начать':
+                    if user.mode == 'start' and msg != 'начать' and msg != 'создать мем':
                         memes_list = search_meme_in_DB(msg)
                         user.mode = 'end'
                         update_user(id, user.mode)
                         send_message(id, 'Прислать один рандомный найденный мем или список найденных мемов?',
                                      end_keyboard)
-                    # elif user.mode == 'start' and msg == 'создать мем':
-                    #     user.mode = 'add'
-                    #     update_user(id, user.mode)
-                    #     send_message()
+                    elif user.mode == 'start' and msg == 'создать мем' and msg != 'начать' and msg!='назад':
+                        user.mode = 'add_name'
+
+                        update_user(id, user.mode)
+                        send_message(id, 'Введи имя для мема', goback_keyboard)
+                    elif user.mode == 'add_name' and msg != 'начать' and msg != 'назад':
+                        user.mode = 'add_link'
+                        update_user(id, user.mode)
+                        add_name = msg
+                        send_message(id, 'Введи вк-ссылку на мем(фото, видео или гиф)', goback_keyboard)
+                    elif user.mode == 'add_link' and msg != 'начать' and msg != 'назад':
+                        user.mode = 'add_tags'
+                        add_link = msg
+                        update_user(id, user.mode)
+                        send_message(id, 'Введи тэг, затем отправь его. Когда надоест, нажми на кнопку СТОП', tags_end_keyboard)
+                    elif user.mode == 'add_tags' and msg != 'стоп' and msg != 'начать' and msg != 'назад':
+                        add_tags.append(msg)
+                        send_message(id, 'Введи тэг, затем отправь его. Когда надоест, нажми на кнопку СТОП',
+                                     tags_end_keyboard)
+                    elif user.mode == 'add_tags' and msg == 'стоп' and msg != 'начать' and msg != 'назад':
+                        user.mode = 'start'
+                        update_user(id, user.mode)
+                        add_meme(add_name, add_link, add_tags)
+                        send_message(id, 'Твой мем добавлен в общую базу. Спасибо за вклад, чумба!', None)
+                        send_message(id, 'Введи слово, связанное с мемом, или нажми на кнопку', keyboard)
                     elif user.mode == 'end':
                         if msg == 'рандомный мем':
                             send_message(id, memes_list[random.randint(0, len(memes_list) - 1)], keyboard)
