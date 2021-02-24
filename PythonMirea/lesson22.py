@@ -1,13 +1,8 @@
 def f22(x):
-    q = "0"
-    binary = str(bin(x))[2:]
-    if len(binary) < 32:
-        q = q * (32 - len(binary))
-        binary = q + binary
-    e = binary[-32:-31]
-    d = binary[-31:-28]
-    c = binary[-28:-13]
-    b = binary[-13:-10]
-    a = binary[-10:]
-    s = int(e + b + a + c + d, 2)
-    return s
+    e = (x & ((2 ** 32 - 1) & ~(2 ** 31 - 1)))
+    d = (x & ((2 ** 31 - 1) & ~(2 ** 28 - 1))) >> 28
+    c = (x & ((2 ** 28 - 1) & ~(2 ** 13 - 1))) >> 10
+    b = (x & ((2 ** 13 - 1) & ~(2 ** 10 - 1))) << 18
+    a = (x & ((2 ** 10 - 1) & ~(2 ** 0 - 1))) << 18
+    return hex(int(a | b | c | d | e))
+print(f22(0xdddc3831))
