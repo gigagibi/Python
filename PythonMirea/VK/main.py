@@ -53,9 +53,9 @@ tags_end_keyboard.add_button(label='Назад', color=VkKeyboardColor.NEGATIVE)
 goback_keyboard = VkKeyboard(one_time=False)
 goback_keyboard.add_button(label='Назад', color=VkKeyboardColor.NEGATIVE)
 
-# клавиатура с мемами пользователя
+# клавиатура с мемами пользо)вателя
 # users_keyboard = VkKeyboard(one_time=False)
-# keyboard.add_button()
+# keyboard.add_button(
 
 
 # добавляет пользователя в базу данных
@@ -146,7 +146,6 @@ for event in longpoll.listen():
                     add_user_into_DB(User(id, 'start'))
                     users = get_users_from_DB()
                     send_message(id, 'Введи слово, связанное с мемом, или нажми на кнопку', keyboard)
-
             for user in users:
 
                 if user.id == id:
