@@ -19,7 +19,7 @@ def f23(l):
                 elif cell == '0':
                     array.append('Нет')
                 elif cell == '1':
-                    array.append('Нет')
+                    array.append('Да')
                 else:
                     array.append('Нет')
         array_f.append(array[1])
