@@ -1,6 +1,6 @@
 def f23(l):
     table = [[]]
-    new_table= [[]]
+    new_table = [[]]
     for row in l:
         if row not in table:
             table.append(row)
@@ -13,10 +13,14 @@ def f23(l):
                 if str(cell).find('|') != -1:
                     b = cell.split('|')
                     array.append(b[0])
-                    array.append(round(float(b[1]), 1))
+                    array.append(str(round(float(b[1]), 1)))
                 elif str(cell).find('@') != -1:
                     array.append(cell.split('@')[1])
                 elif cell == '0':
+                    array.append('Нет')
+                elif cell == '1':
+                    array.append('Нет')
+                else:
                     array.append('Нет')
         array_f.append(array[1])
         array_f.append(array[2])
