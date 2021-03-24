@@ -38,8 +38,8 @@ keyboard.add_button(label="Who tf asked", color=VkKeyboardColor.POSITIVE)
 keyboard.add_line()
 keyboard.add_button(label="Pepe", color=VkKeyboardColor.POSITIVE)
 keyboard.add_button(label="толстяк с пистолетом", color=VkKeyboardColor.POSITIVE)
-keyboard.add_line()
-keyboard.add_button(label="Создать мем", color=VkKeyboardColor.DEFAULT)
+#keyboard.add_line()
+keyboard.add_button(label="Создать мем", color=VkKeyboardColor.POSITIVE)
 # клавиатура для выбора рандома или списка мемов
 end_keyboard = VkKeyboard(one_time=False)
 end_keyboard.add_button(label='Рандомный мем', color=VkKeyboardColor.POSITIVE)
@@ -165,7 +165,7 @@ for event in longpoll.listen():
                         user.mode = 'add_link'
                         update_user(id, user.mode)
                         add_name = msg
-                        send_message(id, 'Введи вк-ссылку на мем(фото, видео или гиф)', goback_keyboard)
+                        send_messmage(id, 'Введи вк-ссылку на мем(фото, видео или гиф)', goback_keyboard)
                     elif user.mode == 'add_link' and msg != 'начать' and msg != 'назад':
                         user.mode = 'add_tags'
                         add_link = msg
