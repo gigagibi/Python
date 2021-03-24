@@ -2,5 +2,5 @@ def hello():
 	print("hello")
 
 
-def _world():
+def world():
 	print("world")

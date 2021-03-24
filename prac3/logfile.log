@@ -1,0 +1,12 @@
+ERROR:root:division by zero
+Traceback (most recent call last):
+  File "D:/Projectss/Python/prac3/prac3.py", line 75, in div
+    return a / b, None
+ZeroDivisionError: division by zero
+NoneType: None
+ERROR:root:unsupported operand type(s) for /: 'str' and 'int'
+Traceback (most recent call last):
+  File "D:/Projectss/Python/prac3/prac3.py", line 75, in div
+    return a / b, None
+TypeError: unsupported operand type(s) for /: 'str' and 'int'
+NoneType: None
