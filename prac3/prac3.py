@@ -51,14 +51,14 @@ if r == True:
 """
 from printermodule import *
 
-try:
-	hello() # hello
-	world() # world
-except:
-	pass 
-
 import helloworldpkg.hello
 import helloworldpkg.world
+
+try:
+    hello()  # hello
+    world()  # world
+except:
+    pass
 
 helloworldpkg.hello.printh()
 helloworldpkg.world.printw()
@@ -69,16 +69,19 @@ import traceback
 logging.basicConfig(filename='logfile.log', filemode='w', level=logging.INFO)
 logging.raiseExceptions = True
 
+
 def div(a, b):
-	try:
-		return a/b, None
-	except Exception as e:
-		return e, traceback.format_exc()
+    try:
+        return a / b, None
+    except Exception as e:
+        return e, traceback.format_exc()
+
 
 def run_with_log(func, a, b):
-	out, trace = div(a,b)
-	if trace is not None:
-		return logging.exception(f'{out}\n{trace}')
+    out, trace = div(a, b)
+    if trace is not None:
+        return logging.exception(f'{out}\n{trace}')
+
 
 run_with_log(div, 6, 3)
 run_with_log(div, 6, 0)

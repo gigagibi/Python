@@ -182,7 +182,7 @@ class SchellingModel:
 			y_it += 1
 		return same_neighbours
 
-model = SchellingModel(10, 10)
+model = SchellingModel(100, 100)
 fig = plt.figure()
 anim = FuncAnimation(fig, model.animate, init_func=model.init, frames=10000, interval=1, blit=True, repeat=False)
 plt.show()
